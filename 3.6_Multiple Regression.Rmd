@@ -1,0 +1,88 @@
+---
+title: "Multiple Regression"
+author: "Deependra Dhakal"
+date: "April 20, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## The power of multiple linear regression
+
+**Definition**: Although the multiple linear regression is an extension of Simple linear regression model, It is a linear combination of more than two values of predictors defining the predicted variable.
+
+Canonical correlation: It is a more advanced topic dealing with cases where multiple dependent variables (criterion) exist in addition to multiple predictors. It is said to a generalization of the regression models.
+
+### The multiple regression model equation
+
+The model equation is in the form of:
+
+???Place the model equation here???
+
+## Example use of MLR
+
+```{r}
+set.seed(13579)
+xcol <- c(rep(1, times = 50))
+leaf_num <- sort(c(rnorm(n = 50, mean = 6, sd = 2.8)), decreasing = FALSE)
+height_len <- c(rnorm(n = 50, mean = 102, sd = 10.6))
+
+# Just some blatantly random stuff follows
+susceptibility_index <- sample(dlnorm(seq(10, 90, length.out = 50), meanlog = 5, sdlog = 1.6) * 100, size = 50, replace = TRUE)
+hist(susceptibility_index, ylab = "susceptibilities") # that's good enough to have some random skewed distribution.
+
+Xij <- cbind(xcol, leaf_num, height_len, susceptibility_index)
+head(Xij)
+```
+
+```{r}
+crop_health <- sort(sample(seq(from = 5, to = 15, by = 0.4), size = 50, replace = TRUE), decreasing = FALSE) # Thats workable
+```
+
+Now, let's make a model for it:
+
+```{r}
+multiple_regression <- lm(crop_health ~ leaf_num + height_len + susceptibility_index)
+summary(multiple_regression)
+```
+
+It is worth keeping only those predictor variables that have significant effect. So, in the case, repondent's income has been dropped out of further analysis and the regression is ran again.
+
+Unlike, simple linear regression the confidence test for significane of single predictor does not coincide with the overall test of regression. However, in cohert with SLR, the test for each predictor variable's significane is conducted with a t-test.
+We see that in this particular case, the overall regression is statistically significant—we can account for roughly 20% of the variation in job satisfaction by knowing an individuals’ age, the number of years on the job, and his or her sense of job security.
+
+## MLR diagnostics: Graphical representations
+
+Since the model's predicted values can be assessed by `predict()` function, we use the output to diagnose various features of our model.
+
+```{r warning=FALSE, xtable, results="asis"}
+confint <- predict(multiple_regression, interval = "confidence")
+predint <- predict(multiple_regression, interval = "prediction")
+intervals <- cbind(confint, predint)
+
+library(xtable)
+tabull <- xtable(head(intervals, n = 10))
+print(tabull, type = "html")
+
+```
+
+Visualizing the model accuracy and the information based on the confidence and prediction intervals is shown as follows:
+
+```{r}
+plot(intervals[, 1], crop_health, xlab = "Intervals", ylab = "Crop Health")
+lines(intervals[, 1])
+points(intervals[, 2], col = "red", type = "l")
+points(intervals[, 3], col = "red", type = "l")
+points(intervals[, 5], col = "blue", type = "l")
+points(intervals[, 6], col = "blue", type = "l")
+```
+
+## The matrix algebra
+
+We can use the matrix algebra to solve a regression equation.
+
+First we make an X matrix using a column of 1s and the predictor variables which are intended.
+
+

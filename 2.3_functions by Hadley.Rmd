@@ -1,0 +1,51 @@
+---
+title: "R Functions"
+author: "Deependra Dhakal, Hadley Wickham"
+date: "October 3, 2016"
+output: slidy_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Functions
+### Q&A
+#### 
+-What are the main components of a function?
+
+The main components of a function are its body, arguments and environment.
+
+-What does the following function return?
+```{r echo = FALSE}
+x <- 10
+f1 <- function(x) {
+  function() {
+    x + 10
+  }
+}
+f1(1)()
+```
+It returns 11.
+
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document.
+
+## Slide with Bullets
+
+- Bullet 1
+- Bullet 2
+- Bullet 3
+
+## Slide with R Output
+
+```{r cars, echo = TRUE}
+summary(cars)
+```
+
+## Slide with Plot
+
+```{r pressure}
+plot(pressure)
+```
+

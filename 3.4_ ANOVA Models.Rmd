@@ -1,0 +1,253 @@
+# Example using sleep data, available in basic packages of R
+
+View data in short
+
+```{r}
+head(sleep)
+```
+
+Give graphical parameters to plot. When called the plot function, the default default behavior of such data type results in a boxplot.
+
+```{r}
+par(mfrow = c(2,2))
+with(sleep, plot(group, extra, xlab="groups of drug", ylab="extra amount of sleep over average", main= "The effect of drugs on sleep"))
+```
+
+To display as scatter plots
+
+```{r}
+with(sleep, plot.default(group, extra, xlab="groups of drug", ylab="extra amount of sleep over average", main= "The effect of drugs on sleep"))
+```
+
+To fit a linear model
+
+```{r}
+sleep_lin_mod <- lm(sleep$extra ~ sleep$group)
+```
+
+View summary of the model
+
+```{r}
+summary(sleep_lin_mod)
+```
+
+# **ANOVA designs**
+# Understanding the F Distribution
+
+Similarities between t-distribution and f-distribution:
+	-Both are the family of distributions.
+	-Based on degress of freedom
+Differences between t-distribution and f-distribution:
+	-Unlike t-distribution, f-distribution has two degrees of freedom
+	-Unlike t-distribution, f-distribution is not symmetrical, but instead positiveluy skewed, and peaks around a value of (which would indicate the two variance estimates in ratio are equal)
+	
+The R functions for the F distribution are df, pf, qf, rf, for the denstiy, cumulative probability,
+quantile, and random generator functions, respectively.
+
+Plotting f-distribution with various combinations of degrees of freedom: (3, 10), (4, 15) and (10, 29),
+we see that as degrees of freedom increase the F distribution becomes more symmetrical.
+```{r echo = FALSE}
+xaxis <- seq(0,6,.1)
+```
+
+y1 <- df(xaxis, 3, 10)
+y2 <- df(xaxis, 4, 15)
+y3 <- df(xaxis, 10, 29)
+plot(xaxis, y3, type = "l", main = "Comparing F Distributions")
+points(xaxis, y2, type = "l", col = "red")
+points(xaxis, y1, type = "l", col = "blue")
+
+For comparing variances var.test function can be used.
+```{r echo = FALSE}
+setwd("D://Projekt Bucklol//Statistical Programming//")
+prepost <- read.csv("prepost.csv", header = TRUE)
+# Learn to stack the side by side variables with a factor.
+attach(prepost)
+var.test(Posttest, Pretest)
+```
+Note the F ratio is less than 1 because the smaller variance was divided by the larger one. Such an F ratio is
+perfectly legitimate. An easy solution to this is to simply divide the larger variance by smaller one.
+
+To get greater than "1" F-ratio:
+```{r}
+1/0.3045669
+```
+
+The p value will be the same whether we divide the larger or the smaller variance by the other. Note that this
+is a two-tailed probability because the alternative hypothesis is that the variances are unequal. Thus, we would
+double the one-tailed p value reported by R when we use the pf() function to determine the p value.
+
+```{r}
+TwoTailedP <- 2 * (1 - pf(3.283351, 15, 20))# Note that this we are now dividing the larger variance by the smaller one.
+TwoTailedP
+```
+The two-tailed p value is indeed the same as that reported by R's var.test function.
+
+# Compounding Alpha and Post Hoc Comparisons
+If we conduct c different comparisons between pairs of means, each at
+a nominal alpha level of .05, the overall Type I error rate will not be .05, but instead would be 1 – (1-.05)^c
+This is clearly too high an error rate for hypothesis testing. ANOVA permits a simultaneous comparison of all 15 means at once, and controls the error rate to the nominal 0.05.
+
+# One-way ANOVA, an example.
+The F ratio is the between groups mean square divided by the within groups mean square. We compare this
+value to the theoretical F distribution with k and N – k degrees of freedom. We will obtain a p value, which is the
+two-tailed probability of finding an F ratio as large as or larger than the one we did if the null hypothesis that the
+population means are equal is true.
+
+```{r echo = FALSE}
+mpg = c(34,35,34.3,35.5,35.8,35.3,36.5,36.4,37,37.6,33.3,34,34.7,33,34.9)
+brand = c("A","A","A","A","A","B","B","B","B","B","C","C","C","C","C")
+mileage = data.frame(mpg = mpg, brand = brand)
+attach(mileage)
+factor(brand)
+mileage
+```
+To produce side by side boxplots
+```{r}
+boxplot(mpg ~ brand)
+```
+It would appear brand B produces better gasoline mileage than A and C, but we must perform the analysis
+of variance to determine if the differences are significant.
+
+Let us create a factor from the brand column and call it group.
+```{r}
+group <- factor(brand)
+group
+```
+Now to perform ANOVA we will use aov() function.
+```{r}
+results <- aov(mpg ~ group)
+results
+```
+To view the saved ANOVA result, use summary() function.
+```{r}
+summary(results)
+```
+The overall F-ratio is significant, so we can do post hoc comparisons to determine which pairs of means are significantly different.
+First, let us examine the means for each level of the grouping factor (gasoline brand).
+```{r}
+model.tables(results, type = "means")
+```
+
+# Tukey HSD Test
+
+It is the only post hoc procedure provided in base version of R. It is more conservative
+than the original Fisher LSD (least significant difference) criterion, which many statisticians feel is too liberal.
+The Tukey HSD criterion is less conservative than the Scheffé procedure, which many statisticians consider
+too conservative.
+A good statistics or experimental design text will help those readers who want to explore
+alternatives to the HSD. To perform the HSD test, we use the TukeyHSD function. As with most statistical
+functions, the R implementation of the Tukey HSD test defaults to an experiment-wise (overall) alpha level of .05.
+
+```{r}
+TukeyHSD(results)
+```
+The Tukey HSD criterion makes use of a quantity known as the “Studentized Range Statistic,” which is
+frequently abbreviated as q. R has the continuous distribution of the Studentized range statistic built into it, along
+with the various continuous distribution functions we have discussed previously. Although Tukey’s HSD is the only
+post hoc comparison procedure built into base R, the stats package has a number of other procedures for post hoc
+comparisons.
+
+# Bonferroni-Corrected Post Hoc comparisons
+The pairwise.t.test function gives the user several choices for adjusting the p value to control for the
+overall Type I error rate. We will compare the means from our one-way ANOVA using Bonferroni-corrections
+and then see how that result compares with that of the Tukey HSD test.
+The Bonferroni correction is simply the division of the overall alpha level by the number
+of comparisons, so the nominal alpha level for significance in this case is .05 / 3 = .0167 for each pairwise t test.
+
+```{r}
+require(stats)
+pairwise.t.test(mpg, group, p.adjust.method = "bonferroni")
+
+# Using the anova() function
+```{r}
+anova(lm(mpg ~ group))
+```
+
+
+# Advanced ANOVA
+# Two way ANOVA
+
+Let us load a dataset, as follows:
+```{r}
+twowayexample <- read.csv("twowayexample.csv", header = TRUE)
+attach(twowayexample)
+Format <- factor(Format)
+Subject <- factor(Subject)
+Format
+Subject
+```
+
+First, let us find the marginal means for the delivery method and the subject.
+```{r}
+tapply(Satisfaction, Format, mean)
+tapply(Satisfaction, Subject, mean)
+```
+
+Now, we do the two-way ANOVA as follows:
+```{r}
+results2 <- aov(Satisfaction ~ Format * Subject)
+summary(results2)
+```
+Since the main effects of both Format and Subject are significant, we use Tukey HSD criterion for our post hoc comparisons to determine
+which pairs of means for Format and Subject are significantly different.
+```{r}
+TukeyHSD(results2, "Format")# Note that we use ANOVA summary result and we must tell the function each variable for which we are interested in having the comparison performed.
+TukeyHSD(results2, "Subject")
+```
+
+# Examining Interactions
+Although the interaction in our current example was not significant, when there is a significant interaction,
+it “trumps” the main effects. We must examine the interaction to determine its nature before we make any
+conclusions about the main effects. One way to do this is to look at the means, as we did above, but a more
+effective way is to examine an interaction plot. Here is how to build such a plot in R. We enter the x-axis factor, the
+“trace factor” for which the lines will be drawn, and the response variable. The default function is the mean, so
+we need not specify it.
+
+```{r}
+interaction.plot(Format, Subject, Satisfaction)
+```
+Plot shows parallel lines indicating a lack of interaction.
+It is sometimes helpful to reverse the interaction plot by having the trace variable from the first plot become the x-axis in the new plot. Here is an interaction
+plot with the course format as the trace variable and the class subject as x-axis.
+```{r}
+interaction.plot(Subject, Format, Satisfaction)
+```
+
+The way to perform repeated measures anova in R:
+```{r}
+repeated <- read.csv(file = "D:/Projekt Bucklol/Statistical Programming/repeated.csv", header = T)
+repeated <- repeated[, 2:4]
+attach(repeated)
+id <- factor(id)
+time <- factor(time)
+results3 <- aov(fitness ~ time + Error(id/time))
+summary(results3)
+```
+
+Let us examine a line graph with the average fitness level plotted over time to see if the trend is a positive one.
+```{r}
+repeated
+result3 <- tapply(fitness, time, mean)
+plot(result3, type = "o", xlab = "Time", ylab = "Fitness Level")
+```
+Removing all the objects in the environment
+```{r}
+detach(repeated)
+rm(list = ls())
+```
+
+# Example of Mixed factorial ANOVA
+```{r}
+mixed <- read.csv("mixed.csv", header = T)
+str(mixed)
+within(mixed, {
+id <- factor(id)
+age <- factor(age)
+distr <- factor(distr)
+}
+)
+attach(mixed)
+interaction.plot(age, distr, score)
+```
+

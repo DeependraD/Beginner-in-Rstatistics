@@ -1,0 +1,185 @@
+---
+title: "Basic Plotting and Summary"
+author: "Deependra Dhakal"
+date: "May 10, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+To make a simple frequency table that summarizes a categorical variable
+
+```{r}
+variablename <- c(rep("ok", 9), "not-ok", "ok", "not-ok", "not-ok", rep("ko", 4))
+table(variablename)
+```
+
+To construct a bar diagram out of frequency table
+
+```{r}
+freqtabledemo <- table(variablename)
+barplot(freqtabledemo)
+barplot(freqtabledemo, # freqtabledemo is better when expressed in percentage
+        main="TITLE", xlab="x-axislabel", ylab="y-axixlabel",
+        las=0, # to change the style of axis label. possible values are 0, 1, 2 and 3.
+        names.arg=c("name1", "name2", "name3"), # a vector of names to be plotted below each bar or group of bars.
+        horiz=TRUE) # default is horiz=FALSE
+```
+
+## To make a pie chart
+
+```{r}
+pie(freqtabledemo)
+```
+
+To modify the plotting characters size
+
+```{r}
+plot(x, y, main="nameit", cex = 0.5)
+```
+
+"cex=0.5" Halves the size of plotting char than what we originally get. Alter "cex.main" for title size change, "cex.lab" for x and y labels, and "cex.axis" for x and y axis, respectively.
+
+To modify the font settings
+
+```{r}
+plot(x, y, main="nameit", font.main = 3) # changing font type "3" gives italicized
+```
+
+Change the plotting char type by using pch argument
+
+```{r}
+plot(x, y, main = "nameit", pch = "w") # plotting character will be shaped "w".
+```
+
+To use different characters with reference to a different categorical variable, "point" function is used.
+
+```{r}
+plot(x[cat_var == "cat1"], y[cat_var == "cat1"], pch = "cat1", col = 1, main = "Different points")
+points(x[cat_var == "cat2"], y[cat_var == "cat2"], pch = "cat2", col =2)
+```
+
+To display more than one plot in the screen simultaneously use "mfrow" or "mfcol" argument in par
+
+To modify the y- and x-axis, use:
+
+```{r}
+plot(x, y, main = "nameit", axes = F)# will remove the axes
+axis(side = 1, at = num_vector, labels = char_vector)#side = 1 corresponds to the x-axis.
+box()#to make box reappear
+```
+
+
+## Summary
+
+Let's use the percapita dataset in data subdirectory
+
+```{r}
+percapita <- read.csv("./data/percapita.csv", header = T, sep = ",")
+```
+
+Column means, median
+
+```{r}
+colMeans(percapita[,2:9])
+attach(percapita)
+mean(Yr_2010, trim = .5)
+apply(percapita[2:9], 2, median)
+apply(percapita[2:9], 2, quantile) # default for number of quantiles is five
+sort(table(Yr_2010))
+table(Yr_2010)
+```
+
+Using "prettyR" package mode for a vector could be calculated by function
+
+```{r}
+# require(prettyR)
+# Mode(Yr_2010)
+```
+
+Measuring location via standard scores
+
+z-score is calculated by the function scale
+
+```{r}
+zYr_2010 <- scale(Yr_2010)
+head(zYr_2010)
+```
+
+Testing the assumption that z-score is standardized across the variable so that average of z-scores is "0" and sd is "1" could be done by calculating
+
+```{r}
+mean(zYr_2010)
+apply(zYr_2010, 2, sd)
+```
+
+## Measuring variability
+Try inbuilt `range()` function of R. Or, Manually write a function for range difference calculation:
+For testing, we read in weights dataset from data subdirectory as a vector.
+
+```{r}
+weights <- as.vector((read.csv("./data/weights.csv", header = T))$x)
+range.difference <- function(x) max(x) - min(x)
+range.difference(weights)
+
+```
+
+Median and mean absolute deviations provide an idea of distribution of data with all of them equal or similar, that implies normal distribution.
+
+```{r}
+mad(weights)
+mad(weights, center = mean(weights))
+sd(weights)
+hist(weights)
+```
+
+Interquartile range is given by
+```{r}
+IQR(weights)
+```
+
+Create "coefficient of variation" function
+
+```{r}
+CV <- function(x) sd(x)/mean(x)
+CV(weights)
+```
+
+Correlation and covariation
+
+```{r}
+sales <- read.csv("./data/sales.csv", header = T)
+head(sales)
+```
+
+An elegant way to rename the dataframe columns(i.e., the "names" attribute)
+
+```{r}
+attributes(sales)
+class(attributes(sales))
+attributes(sales)$names
+attributes(sales)$names <- c("Region", "Advertising", "Sales")
+```
+
+Unlike variance, the covariance can be "+ve", "-ve" or "0"
+
+```{r}
+attach(sales)
+cov(Advertising, Sales)
+```
+
+Try and make a correlation coefficient function
+
+```{r}
+corr.fun <- function(x, y)
+(cov(x, y)/(sd(x)* sd(y)))
+corr.fun(Advertising, Sales)
+```
+
+Use function: cor() for creating matrix of correlation coefficients, using variables from dataframe.
+
+## Measuring Symmetry(or lack thereof)
+Calculate skewness from functio skew() and kurtosi() both from the package = "psych".
+

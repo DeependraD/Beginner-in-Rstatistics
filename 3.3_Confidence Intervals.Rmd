@@ -1,0 +1,142 @@
+---
+title: "T-distribution function"
+author: "Deependra Dhakal"
+date: "September 27, 2016"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Confidence intervals for mean
+
+To find the confidence intervals for mean using t-distribution, we use the following function:
+
+```{r echo=TRUE}
+confint.mean <- function(x, alpha = .05, two.tailed = TRUE) 
+{
+  cat("\t","Confidence Interval for the Mean","\n")
+  cat("Mean:",mean(x),"\n")
+  df <- length(x) - 1
+  stderr <- sd(x)/sqrt(length(x))
+  cat("Standard error of the mean:",stderr,"\n")
+  conflevel <- 1 - alpha/2
+  if (two.tailed == FALSE) {
+    conflevel <- 1 - alpha
+  }
+  tcrit <- qt(conflevel, df)
+  margin <- stderr * tcrit
+  LL <- mean(x) - margin
+  UL <- mean(x) + margin
+  if (two.tailed == FALSE) {
+    cat("You are doing a one-tailed test.","\n")
+    cat("If your test is left-tailed, the lower bound","\n")
+    cat("is negative infinity. If your test is right-tailed","\n")
+    cat("the upper bound is positive infinity.","\n")
+    cat("Either add the margin",margin,"to or subract it from","\n")
+    cat("the sample mean as appropriate.","\n")
+    cat("For a left-tailed test, the upper bound is",LL,".","\n")
+    cat("For a right-tailed test, the lower bound is",UL,".","\n")
+  }
+  cat("upper bound:",LL,"\n")
+  cat("lower bound:",UL,"\n")
+}
+```
+
+## Testing with dataset
+
+Using the weights of 40 adult men, who exercise regularly, measured for the year 2002, let us calculate both the t.test and the confint.mean confidence intervals for the sake of comparison.
+
+The dataset is:
+
+```{r echo = FALSE}
+weights <- c(169.1,144.2,179.3,175.8,152.6,166.8,135.0,201.5,175.2,139.0,156.3,186.6,
+191.1,151.3,209.4,237.1,176.7,220.6,166.1,137.4,164.2,162.4,151.8,144.1,
+204.6,193.8,172.9,161.9,174.8,169.8,213.3,198.0,173.3,214.5,137.1,119.5,
+189.1,164.7,170.1,151.0)
+weights
+```
+
+As the following R output shows, the two functions produce identical results.
+
+```{r}
+confint.mean(weights)
+
+t.test(weights)
+```
+
+We can use `chi-square` distribution to develop confidence intervals for the population variance.
+
+```{r}
+xaxis <- seq(0, 50)
+y1 <- dchisq(xaxis, 9)
+y2 <- dchisq(xaxis, 19)
+plot(y1, type = "l", main = "Chi-Square Distributions", xlab = "Chi-Square")
+points(xaxis, y2, type = "l", col = "red")# The red line is with df = 19.
+```
+
+A function of sample variance follows the `chi-square` distribution, given that the population is normally distributed with and random samples have been obtained.
+Considering the same sample of weights of 40 males, critical values(`chi-square` values) can be computed by qchisq function for 95% confidence interval, left and right individually.
+
+```{r}
+qchisq(0.025, 39)# for left 2.5% with 39 df.
+qchisq(0.975, 39)# for right 97.5% with 39 df.
+
+```
+
+Both the variance and `chi-square` are based on squared deviations, as we discussed earlier. Thus, it makes sense that the distribution of the sample variance would follow a `chi-square` distribution.
+
+Following function calculates the confidence interval for variance and standard deviation.
+
+```{r}
+confi.var <- function(x, n, alpha = .05) 
+{
+chisqL <- qchisq(alpha/2, n-1)
+chisqR <- qchisq(1 - alpha/2, n-1)
+sampvar <- var(x)
+lower <- ((n - 1) * sampvar)/chisqR
+upper <- ((n - 1) * sampvar)/chisqL
+cat(1 - alpha,"% confidence interval for variance:","\n")
+cat("sample variance:",sampvar,"\n")
+cat("lower limit",lower,"\n")
+cat("upper limit",upper,"\n")
+cat("confidence interval for standard deviation:","\n")
+cat("sample standard deviation",sd(x),"\n")
+cat("lower limit",sqrt(lower),"\n")
+cat("upper limit",sqrt(upper),"\n")
+}
+```
+
+With our example data set of weights, lets look at the output.
+
+```{r}
+confi.var(weights, length(weights))
+```
+
+# Calculating confidence intervals for difference between means
+Just as one sample `t-test` produces confidence intervals, so does the two sample test. We have the test scores for 20 students. We will do a two-sample `t-test` comparing the ages of males and females.
+The dataset is:
+
+```{r echo = FALSE}
+quiz_std <- read.csv(file = "D:/Projekt Bucklol/Statistical Programming/quiz_std.csv", header = TRUE)
+quiz_std
+attach(quiz_std)
+```
+
+After attaching the dataset, we apply t.test function to see the following resulting output. The default is the `Welch's t-test` which does not assume equal variances.
+
+```{r}
+t.test(Age ~ Gender)
+```
+
+# Confidence interval using stats package
+
+One of the useful functions of the stats package is **confint()** function. It takes a model as an argument to return the confidence interval at given level of confidence.
+
+```{r}
+require(stats)
+mod_agender <- lm(Age ~ Gender)
+confint(mod_agender)
+```
+
