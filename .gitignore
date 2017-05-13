@@ -3,3 +3,5 @@ linear_algebra.Rmd
 .Rhistory
 .Rproj.user
 .Rproj.user/.
+*.html
+99*.*
